@@ -8,8 +8,7 @@ SKIPPER_PARAMS ?= -i
 
 # bm-inventory
 BMI_BRANCH := $(or $(BMI_BRANCH), "master")
-BMI_URL := $(or $(BMI_URL), "quay.io/ocpmetal/bm-inventory")
-BMI_TAG := $(or $(BMI_TAG), "latest")
+SERVICE := $(or $(SERVICE), quay.io/ocpmetal/bm-inventory:latest)
 
 # nodes params
 ISO := $(or $(ISO), "") # ISO should point to a file that has the '.iso' extension. Otherwise deploy will fail!
@@ -67,7 +66,8 @@ create_full_environment:
 create_environment: image_build bring_bm_inventory start_minikube
 
 image_build:
-	$(CONTAINER_COMMAND) build --build-arg BMI_URL=${BMI_URL} --build-arg BMI_TAG=${BMI_TAG} -t $(IMAGE_NAME):$(IMAGE_TAG) -f Dockerfile.test-infra .
+	sed 's/^FROM .*bm-inventory.*:latest/FROM $(subst /,\/,${SERVICE})/' Dockerfile.test-infra | \
+	 $(CONTAINER_COMMAND) build -t $(IMAGE_NAME):$(IMAGE_TAG) -f- .
 
 clean:
 	rm -rf build
